@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Onde Tem Banheiro</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+        }
+
+        nav {
+            background: #333;
+            color: white;
+            padding: 10px;
+            display: flex;
+            gap: 20px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        #filtros {
+            padding: 10px;
+            background: #f9f9f9;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        #filtros label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        #map {
+            flex-grow: 1;
+        }
+
+        .popup {
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .popup b {
+            font-size: 16px;
+            color: #222;
+        }
+
+        .popup span {
+            display: block;
+            margin-top: 4px;
+        }
+
+        .popup a {
+            margin-top: 6px;
+            display: inline-block;
+            color: blue;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <a href="/">Mapa</a>
+    <a href="/cadastro">Cadastro</a>
+</nav>
+
+<form id="filtros">
+    <label><input type="checkbox" id="f_acess"> Acessível</label>
+    <label><input type="checkbox" id="f_gratis"> Gratuito</label>
+    <label><input type="checkbox" id="f_publico"> Público</label>
+    <label><input type="checkbox" id="f_fraldario"> Fraldário</label>
+    <label><input type="checkbox" id="f_papel"> Papel</label>
+    <label><input type="checkbox" id="f_sabao"> Sabão</label>
+    <label><input type="checkbox" id="f_alcool"> Álcool</label>
+    <label>
+        Tipo:
+        <select id="f_tipo">
+            <option value="">Todos</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Parque">Parque</option>
+            <option value="Restaurante">Restaurante</option>
+            <option value="Rodoviária">Rodoviária</option>
+            <option value="Outros">Outros</option>
+        </select>
+    </label>
+</form>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map').setView([0, 0], 16);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+
+    const iconAccessible = L.icon({
+        iconUrl: '/icons/accessible.png',
+        iconSize: [20, 20],       // menor e mais proporcional
+        iconAnchor: [12, 24],
+        popupAnchor: [0, -24]
+    });
+
+    const iconDefault = L.icon({
+        iconUrl: '/icons/default.png',
+        iconSize: [24, 24],
+        iconAnchor: [12, 24],
+        popupAnchor: [0, -24]
+    });
+
+
+    map.on('click', function(e) {
+        const { lat, lng } = e.latlng;
+        const popup = L.popup()
+            .setLatLng([lat, lng])
+            .setContent(`
+            <b>Deseja cadastrar um banheiro aqui?</b><br/>
+            <a href="/cadastro?lat=${lat}&lng=${lng}">📍 Cadastrar aqui</a>
+        `)
+            .openOn(map);
+    });
+
+    let markers = [];
+
+    function renderMarkers(restrooms) {
+        markers.forEach(m => map.removeLayer(m));
+        markers = [];
+
+        const f = {
+            acess:        document.getElementById('f_acess').checked,
+            gratis:       document.getElementById('f_gratis').checked,
+            publico:      document.getElementById('f_publico').checked,
+            fraldario:    document.getElementById('f_fraldario').checked,
+            papel:        document.getElementById('f_papel').checked,
+            sabao:        document.getElementById('f_sabao').checked,
+            alcool:       document.getElementById('f_alcool').checked,
+            tipo:         document.getElementById('f_tipo').value
+        };
+
+        restrooms.forEach(r => {
+            const lat = r.location.latitude;
+            const lng = r.location.longitude;
+            if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return;
+
+            if (f.acess && !r.accessible) return;
+            if (f.gratis && !r.free) return;
+            if (f.publico && !r.publicPlace) return;
+            if (f.fraldario && !r.babyChangingTable) return;
+            if (f.papel && !r.hasPaper) return;
+            if (f.sabao && !r.hasSoap) return;
+            if (f.alcool && !r.hasSanitizer) return;
+            if (f.tipo && r.type !== f.tipo) return;
+
+            const gmaps = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+            const popupContent = `
+            <div class="popup">
+                <b>${r.name}</b>
+                ${r.description ? `<span>${r.description}</span>` : ''}
+                <span><b>Acessível:</b> ${r.accessible ? 'Sim' : 'Não'}</span>
+                <span><b>Público:</b> ${r.publicPlace ? 'Sim' : 'Não'}</span>
+                <span><b>Gratuito:</b> ${r.free ? 'Sim' : 'Não'}</span>
+                <span><b>Fraldário:</b> ${r.babyChangingTable ? 'Sim' : 'Não'}</span>
+                <span><b>Papel:</b> ${r.hasPaper ? 'Sim' : 'Não'}</span>
+                <span><b>Sabão:</b> ${r.hasSoap ? 'Sim' : 'Não'}</span>
+                <span><b>Álcool:</b> ${r.hasSanitizer ? 'Sim' : 'Não'}</span>
+                <span><b>Tipo:</b> ${r.type || 'Não informado'}</span>
+                <a href="${gmaps}" target="_blank">📍 Como chegar</a>
+            </div>
+        `;
+            const chosenIcon = r.accessible ? iconAccessible : iconDefault;
+
+            const marker = L.marker([lat, lng], { icon: chosenIcon }).addTo(map).bindPopup(popupContent);
+            markers.push(marker);
+        });
+    }
+
+
+    let allRestrooms = [];
+
+    async function carregarRestrooms() {
+        const res = await fetch('http://localhost:8080/api/restrooms/all');
+        allRestrooms = await res.json();
+        renderMarkers(allRestrooms);
+    }
+
+    navigator.geolocation.getCurrentPosition(pos => {
+        const { latitude, longitude } = pos.coords;
+        map.setView([latitude, longitude], 16);
+        L.marker([latitude, longitude]).addTo(map).bindPopup('Você está aqui').openPopup();
+        carregarRestrooms();
+    }, () => {
+        alert("Não foi possível obter sua localização");
+        carregarRestrooms();
+    });
+
+    document.getElementById('filtros').addEventListener('change', () => {
+        renderMarkers(allRestrooms);
+    });
+</script>
+
+</body>
+</html>

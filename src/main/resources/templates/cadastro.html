@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cadastro de Banheiro</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 500px; margin: auto; }
+        label, input, textarea, select { display: block; width: 100%; margin-bottom: 10px; }
+        button { padding: 10px; background: #333; color: white; border: none; cursor: pointer; }
+        nav { background: #333; color: white; padding: 10px; margin-bottom: 20px; }
+        nav a { color: white; text-decoration: none; font-weight: bold; margin-right: 20px; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <a href="/">Mapa</a>
+    <a href="/cadastro">Cadastro</a>
+</nav>
+
+<h1>Cadastro de Banheiro</h1>
+
+<form id="formCadastro">
+    <label for="name">Nome</label>
+    <input type="text" id="name" name="name" required />
+
+    <label for="description">Descrição</label>
+    <textarea id="description" name="description"></textarea>
+
+    <label for="acess">Acessível para cadeirantes?</label>
+    <select id="acess" name="acess" required>
+        <option value="true">Sim</option>
+        <option value="false">Não</option>
+    </select>
+
+    <label for="publicPlace">É público?</label>
+    <select id="publicPlace" name="publicPlace" required>
+        <option value="true">Sim</option>
+        <option value="false">Não</option>
+    </select>
+
+    <label for="free">É gratuito?</label>
+    <select id="free" name="free" required>
+        <option value="true">Sim</option>
+        <option value="false">Não</option>
+    </select>
+
+    <label for="babyChangingTable">Tem fraldário?</label>
+    <select id="babyChangingTable" name="babyChangingTable" required>
+        <option value="true">Sim</option>
+        <option value="false">Não</option>
+    </select>
+
+    <label for="hasPaper">Tem papel higiênico?</label>
+    <select id="hasPaper" name="hasPaper" required>
+        <option value="true">Sim</option>
+        <option value="false">Não</option>
+    </select>
+
+    <label for="hasSoap">Tem sabão?</label>
+    <select id="hasSoap" name="hasSoap" required>
+        <option value="true">Sim</option>
+        <option value="false">Não</option>
+    </select>
+
+    <label for="hasSanitizer">Tem álcool/antisséptico?</label>
+    <select id="hasSanitizer" name="hasSanitizer" required>
+        <option value="true">Sim</option>
+        <option value="false">Não</option>
+    </select>
+
+    <label for="type">Tipo do local</label>
+    <select id="type" name="type" required>
+        <option value="Shopping">Shopping</option>
+        <option value="Restaurante">Restaurante</option>
+        <option value="Parque">Parque</option>
+        <option value="Rodoviária">Rodoviária</option>
+        <option value="Outros">Outros</option>
+    </select>
+
+    <label for="latitude">Latitude</label>
+    <input type="number" step="any" id="latitude" name="latitude" required  />
+
+    <label for="longitude">Longitude</label>
+    <input type="number" step="any" id="longitude" name="longitude" required  />
+
+    <button type="submit">Cadastrar</button>
+</form>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const latParam = urlParams.get('lat');
+    const lngParam = urlParams.get('lng');
+
+    if (latParam && lngParam) {
+        document.getElementById('latitude').value = Number(latParam).toFixed(8);
+        document.getElementById('longitude').value = Number(lngParam).toFixed(8);
+    } else {
+        navigator.geolocation.getCurrentPosition(pos => {
+            const { latitude, longitude } = pos.coords;
+            document.getElementById('latitude').value = Number(latitude).toFixed(8);
+            document.getElementById('longitude').value = Number(longitude).toFixed(8);
+        }, () => alert("Não foi possível obter sua localização."));
+    }
+
+    const form = document.getElementById('formCadastro');
+
+    form.addEventListener('submit', async e => {
+        e.preventDefault();
+
+        const data = {
+            name:                 form.name.value,
+            description:          form.description.value,
+            acess:                form.acess.value === 'true',
+            publicPlace:          form.publicPlace.value === 'true',
+            free:                 form.free.value === 'true',
+            babyChangingTable:    form.babyChangingTable.value === 'true',
+            hasPaper:             form.hasPaper.value === 'true',
+            hasSoap:              form.hasSoap.value === 'true',
+            hasSanitizer:         form.hasSanitizer.value === 'true',
+            type:                 form.type.value,
+            latitude:             parseFloat(form.latitude.value.replace(',', '.')),
+            longitude:            parseFloat(form.longitude.value.replace(',', '.'))
+        };
+
+        try {
+            const res = await fetch('http://localhost:8080/api/restrooms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (res.ok) {
+                alert('Banheiro cadastrado com sucesso!');
+                form.reset();
+            } else {
+                const error = await res.text();
+                alert('Erro: ' + error);
+            }
+        } catch (err) {
+            alert('Erro ao conectar com o servidor.');
+        }
+    });
+</script>
+
+</body>
+</html>
