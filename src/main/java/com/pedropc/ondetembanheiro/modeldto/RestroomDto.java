@@ -1,12 +1,8 @@
 package com.pedropc.ondetembanheiro.modeldto;
 
 import jakarta.validation.constraints.*;
-
 public record RestroomDto(
-        @NotBlank String name,
-        String description,
-        @NotNull Double latitude,
-        @NotNull Double longitude,
+        PlaceDto place,
         boolean acess,
         boolean publicPlace,
         boolean free,
@@ -14,6 +10,5 @@ public record RestroomDto(
         boolean hasPaper,
         boolean hasSoap,
         boolean hasSanitizer,
-        String type){
-
-}
+        double averageStars
+) {}

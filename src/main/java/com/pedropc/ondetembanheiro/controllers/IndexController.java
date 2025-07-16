@@ -6,13 +6,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class IndexController {
 
-    @GetMapping("/")
+    @GetMapping("/home")
     public String index() {
         return "index";
     }
 
-    @GetMapping("/cadastro")
-    public String cadastro() {
-        return "cadastro"; // src/main/resources/templates/cadastro.html
+    @GetMapping("/sobre")
+    public String about() {
+        return "sobre";
     }
 }

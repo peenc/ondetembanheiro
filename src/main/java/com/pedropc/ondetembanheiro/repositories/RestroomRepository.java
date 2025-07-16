@@ -10,22 +10,32 @@ import java.util.List;
 @Repository
 public interface RestroomRepository extends JpaRepository<Restroom, Long> {
 
-      @Query(value = """
-    SELECT r.*,
-           ( 6371 * acos(
-               cos(radians(:lat)) * cos(radians(r.latitude)) *
-               cos(radians(r.longitude) - radians(:lng)) +
-               sin(radians(:lat)) * sin(radians(r.latitude))
-             ) ) AS distance
+    @Query(value = """
+    SELECT 
+        r.id,
+        r.name,
+        r.description,
+        r.type,
+        r.latitude,
+        r.longitude,
+        (6371 * acos(
+            cos(radians(:lat)) * cos(radians(r.latitude)) *
+            cos(radians(r.longitude) - radians(:lng)) +
+            sin(radians(:lat)) * sin(radians(r.latitude))
+        )) AS distanciaKm,
+        COALESCE(AVG(rt.stars), 0) AS averageStars
     FROM restroom r
-    WHERE ( 6371 * acos(
-               cos(radians(:lat)) * cos(radians(r.latitude)) *
-               cos(radians(r.longitude) - radians(:lng)) +
-               sin(radians(:lat)) * sin(radians(r.latitude))
-           ) ) < :radius
-    ORDER BY distance
-  """, nativeQuery = true)
-    List<Restroom> findNearby(@Param("lat") double lat,
-                              @Param("lng") double lng,
-                              @Param("radius") double radiusKm);
+    LEFT JOIN rating rt ON rt.restroom_id = r.id
+    WHERE (6371 * acos(
+            cos(radians(:lat)) * cos(radians(r.latitude)) *
+            cos(radians(r.longitude) - radians(:lng)) +
+            sin(radians(:lat)) * sin(radians(r.latitude))
+        )) < :radius
+    GROUP BY r.id, r.name, r.description, r.type, r.latitude, r.longitude
+    ORDER BY distanciaKm
+""", nativeQuery = true)
+    List<Object[]> findNearbyRaw(@Param("lat") double lat,
+                                 @Param("lng") double lng,
+                                 @Param("radius") double radiusKm);
+
 }

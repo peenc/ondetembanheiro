@@ -1,5 +1,6 @@
 package com.pedropc.ondetembanheiro.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
@@ -8,21 +9,11 @@ import lombok.Setter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
-public class Restroom {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @NotBlank
-    private String name;
-
-    private String description;
-
-    /** Localização (latitude/longitude) */
-    @Embedded
-    private Location location;
+public class Restroom extends Place {
 
     /** Acessível para cadeirantes */
     private Boolean acess;
@@ -45,22 +36,16 @@ public class Restroom {
     /** Tem álcool/antisséptico para as mãos */
     private Boolean hasSanitizer;
 
-    /** Tipo: Shopping, Restaurante, Parque, Rodoviária, Outros… */
-    private String type;
+    @OneToMany(mappedBy = "restroom", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<Rating> ratings = new ArrayList<>();
 
-    /*‑‑‑ Getters & Setters ‑‑‑*/
+    public double getAverageStars() {
+        return ratings.isEmpty() ? 0 : ratings.stream().mapToInt(Rating::getStars).average().orElse(0);
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-
-    public Location getLocation() { return location; }
-    public void setLocation(Location location) { this.location = location; }
+    public List<Rating> getRatings() { return ratings; }
+    public void setRatings(List<Rating> ratings) { this.ratings = ratings; }
 
     public Boolean getAccessible() { return acess; }
     public void setAccessible(Boolean accessible) { this.acess = accessible; }
@@ -82,8 +67,5 @@ public class Restroom {
 
     public Boolean getHasSanitizer() { return hasSanitizer; }
     public void setHasSanitizer(Boolean hasSanitizer) { this.hasSanitizer = hasSanitizer; }
-
-    public String getType() { return type; }
-    public void setType(String type) { this.type = type; }
 }
 

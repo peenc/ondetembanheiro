@@ -1,18 +1,20 @@
 package com.pedropc.ondetembanheiro.model;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.persistence.Embeddable;
 
 @Embeddable
 public class Location {
-    @NotNull
     private Double latitude;
-
-    @NotNull
     private Double longitude;
 
+    public Location() {}
+
+    public Location(Double latitude, Double longitude) {
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
+
+    // getters e setters
     public Double getLatitude() {
         return latitude;
     }
