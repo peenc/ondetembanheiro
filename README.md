@@ -35,12 +35,6 @@ O **Onde Tem Banheiro** é uma plataforma comunitária para ajudar pessoas a loc
 
 ---
 
-## 🤝 Contribuindo
-
-Se você tem sugestões, encontrou algum bug ou quer contribuir com o projeto, fique à vontade para abrir uma issue ou enviar um pull request!
-
----
-
 ## 📄 Licença
 
 Todos os direitos reservados a Indefinidos. O uso, redistribuição ou comercialização deste software sem autorização é proibido.
