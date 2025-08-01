@@ -1,0 +1,23 @@
+#map {
+    height: 70vh;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.stars span {
+    font-size: 2rem;
+    cursor: pointer;
+    color: #d1d5db;
+    transition: color 0.3s ease, transform 0.2s ease;
+}
+
+.stars span.sel,
+.stars span:hover,
+.stars span:hover ~ span {
+    color: #facc15;
+    transform: scale(1.2);
+}
+
+.stars span:hover {
+    transform: scale(1.4);
+}
